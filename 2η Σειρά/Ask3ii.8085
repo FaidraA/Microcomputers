@@ -1,0 +1,16 @@
+adr0:  CALL KIND 
+       CPI 08H         ;Έλεγξε ότι η είσοδος <8
+       JNC adr2
+       CPI 00H
+       JZ adr2
+       MOV C,A
+       MVI A,FFH
+       DCR C           ;Θέλουμε τα C-1 τελευταία ψηφία να γίνουν 0
+       JZ ad3
+ adr1: RRC     
+       SUI 01H         ;θα παει 1 στο LSB οποτε το αφαιρουμε
+       DCR C
+       JNZ adr1 
+adr3: STA 3000H   
+adr2: JMP adr0
+     END

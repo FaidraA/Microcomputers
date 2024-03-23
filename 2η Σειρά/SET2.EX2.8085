@@ -1,0 +1,94 @@
+
+
+
+; ============= ÌÁÉÍ (START) ================
+START:	LXI B,411BH	; N = (BC) = 16666 => delay = 0.2 sec
+	MVI E,4BH	; E = 100 (100 x 0.2 = 20 sec)
+	MVI H,00H
+	MVI A,00H
+	
+	CALL ÌSB	; CHECK dip switch MSB
+	JC START
+L1:	CALL MSB
+	JNC L1
+L2:	CALL MSB
+	JC L2
+	
+; ===== ROUTINE: WHEN DIP SWITCH MSB = OFF =======
+GO_0:	CPI 04H	; IF A-4 >= 0, THEN SWITCH OUTPUT (BLINK)
+	JC NEXT0
+	CALL CHNG
+
+NEXT0:	CALL PUT
+
+	CALL ÌSB	; CHECK MSB dip switch.
+	JC GO_1	; IF ON GO TO OTHER ROUTINE
+			; 
+	DCR E		
+	JZ CHOOS
+	JMP GO_0
+
+; ===== ROUTINE DIP SWITCH MSB = ON =========
+GO_1:	CPI 04H	; A-4 >= 0, THEN SWITCH OUTPUT  (BLINK)
+	JC NEXT1
+	CALL CHNG
+
+NEXT1:	CALL PUT
+
+	CALL ÌSB	; CHECK MSB dip switch.
+	JC NEXT2	; IF OFF RENEW TIME
+	MVI E,4BH
+	JMP GO_0	; GO TO FIRST ROUTINE (LOOP)
+
+NEXT2:	DCR E		
+	JZ CHOOS
+	JMP GO_1
+
+; ========== END OF 20 sec + MANAGEMENT =============	
+CHOOS:	MVI E,4BH	; THE ROUTINE IS CALLED WHEN E=0
+	MVI A,FFH	; WHEN THE 100 LOOPS ARE OVER TO REINITIALIZE
+	STA 3000H	; 
+	MVI A,00H	; THE PROGRAMM WAITS FOR THE TURN ON OF THE
+	MVI H,00H	;  push-button
+	CALL MSB	
+	JC L2		; DEPENDING ON THE STATE OF dip switch MSB
+	JMP L1		;THE PROGRAMM GOES TO THE RIGHT LINE
+; =======================================================
+
+
+; =========== STALL ROUTINE =============
+; delay = 12(N-1) + 20.5 ìsec Í = (BC) 
+
+DELAY:	DCX B		; 6 STATES
+	MOV A,B	; 4 STATES
+	ORA C		; 4 STATES
+	JNZ DELAY	; 7/10 STATES
+	RET		; 10 STATES
+; ======================================================
+
+; ========= ROUTINE CHECK DIP SWITCH MSB ==========	
+LSB:	MOV D,A	; TEMP SAVE Á
+	LDA 2000H
+	RAR		; GET MSB AT CY
+	MOV A,D	; UNSAVE Á
+	RET
+; ======================================================
+
+; =========== ROUTINE SWITCH LED =============
+CHNG:	MOV A,H	; ROUTINE REVERSES THE OUTPUT H WHEN
+	CMA		; 
+	MOV H,A	;  4 x 0.2 = 0.8 sec GO BY
+	MVI A,00H	
+	RET
+; ======================================================
+
+; ================ ROUTINE OUTPUT ===================
+PUT:	MOV D,A	; TEMP SAVE Á
+	MOV A,H	; FORWARD Ç AT THE OUTPUT
+	STA 3000H	
+	CALL DELAY	; 
+	MOV A,D	; UNSAVE Á
+	INR A	
+	RET
+; ======================================================
+	END

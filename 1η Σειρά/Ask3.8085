@@ -1,0 +1,42 @@
+      LDA 2000H         ;Το Α παίρνει την τιμή της εισόδου
+      CPI 64H
+      JNC CENTI         ;Αν Α>99 εκτέλεσε το CENTI
+      MVI B,FFH 
+DECA:
+      INR B
+      SUI 0AH
+      JNC DECA
+      ADI 0AH
+      STA 3000H        ;Το αποτέλεσμα τυπώνεται στην έξοδο
+      MOV A,B
+      RAL              ;Ολίσθηση 4 θέσεις αριστερά έτσι ώστε 
+      RAL              ;να αντιστοιχούν οι δεκάδες στα MSB
+      RAL
+      RAL
+      STA 3000H        ;Το αποτέλεσμα τυπώνεται στην έξοδο
+CENTI: 
+      CPI C8H          ;Ελεγξε αν ειναι μεγαλύτερο του 199
+      JNC TCENT        ;Αν ναι, άλμα στο TCENT αλλιώς συνέχεια στο CENTI
+      INR B
+      SUI 0AH
+      JNC CENTI
+      ADI 0AH
+      STA 3000H        ;Εμφάνισε τα LSB
+      JMP REPEAT       ;Μπες στον ατέρμονο βρόχο
+TCENT:
+      INR B
+      SUI 0AH
+      JNC TCENT
+      ADI  0AH
+      MOV A,B
+      RAL              ;Ολίσθηση 4 θέσεις αριστερά έτσι ώστε 
+      RAL              ;να ενεργοποιούνται τα MSB
+      RAL
+      RAL
+      STA 3000H        ;Εμφάνισε τα MSB
+      JMP REPEAT       ;Μπες στον ατέρμονο βρόγχο                 
+REPEAT:
+       STA 3000H       ;Βάλε στην έξοδο το Α
+       JMP REPEAT      ;Επανάλαβε για πάντα
+
+END                    ;Προστέθηκε για την μεταγλώττιση

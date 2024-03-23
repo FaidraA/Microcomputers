@@ -1,0 +1,22 @@
+	IN 10H
+	MVI D,64H     ;K1=100
+	MVI E,C8H     ;K2=200
+	MVI A,10H
+	MVI A,0DH
+	SIM
+	EI
+RST6.5: 
+	PUSH PSW
+	PUSH D        ;Τα D,E θα χρησιμοποιηθούν από την STDM
+	CALL KIND     ;Διάβασμα από το πληκτρολόγιο των LSB
+	MOV E,A       ;Αποθήκευση των LSB  
+	CALL KIND     ;Διάβασμα από το πληκτρολόγιο των MSB
+	MOV D,A       ;Αποθήκευση των MSB	
+	CALL STDM
+	CALL DCD
+	POP D
+	POP PSW
+	EI
+	RET
+ 
+ END

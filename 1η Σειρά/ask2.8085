@@ -1,0 +1,29 @@
+	IN 10H
+	LXI B,01F4H ;slow 500ms = 0x1F4=0,5s
+	MVI E,01H ;initial LED το LSB
+START:
+	LDA 2000H
+	MOV D,A
+	RRC ;shift right
+	JNC START ;check LSB
+	CALL DELB ;slow 0,5s
+	MOV A,D
+	RLC ;shift left
+	JC TURNRIGHT ;check MSB
+TURNLEFT: ;
+	MOV A,E ;previous LED
+	CMA ;reverse logic LEDs
+	STA 3000H
+	CMA
+	RLC
+	MOV E,A ;next LED
+	JMP START
+TURNRIGHT: ;
+	MOV A,E
+	CMA
+	STA 3000H
+	CMA
+	RRC
+	MOV E,A
+	JMP START
+END

@@ -1,0 +1,170 @@
+
+
+
+; ============= START ================
+
+START:	IN 10H		; REMOVE MEMORY PROTECTION
+	LXI H,0A00H	; 0Á00H = BEGINING OF MEMORY BLOVK
+	MVI B,04H	; LOOP
+L1:	MVI M,10H	; SAVE NULL  (4 TIMES)
+	INX H
+	DCR B
+	JNZ L1
+	
+; ================== CHECK LINE  0 =====================
+LINE0:	MVI A,FEH	; SCAN = 11111110 - LINE CHOICE
+	STA 2800H	
+	LDA 1800H	; READ KEY COLUMNS
+	ANI 07H	; KEEP ONLY 3 LSB
+
+	MVI C,86H	; C = PROBABLE PASSWORD
+	CPI 06H	; A ?= 00000110 (THE KEY OF THE FIRST COLUMN IS PRESSED
+			; [INSTR_STEP])
+	JZ SHOW	; IF YES, MOVE PASSWORD TO 
+			; OUTPUT OF 7-segment display
+
+	MVI C,85H	; SAME FOR ALL THE BUTTONS
+	CPI 05H	; A ?= 00000101 (THE KEY OF THE SECOND COLUMN IS PRESSED
+			;  [FETCH PC])
+	JZ SHOW	 	
+
+			; IGNORE BUTTON HDWR_STEP
+
+; ================== CHECK LINE 1 =====================
+LINE1:	MVI A,FDH
+	STA 2800H	
+	LDA 1800H	 
+	ANI 07H		
+
+	MVI C,84H	
+	CPI 06H	; RUN	
+	JZ SHOW	
+	MVI C,80H	
+	CPI 05H	; FETCH_REG
+	JZ SHOW	 
+	MVI C,82H	 
+	CPI 03H	; FETCH_ADDRS
+	JZ SHOW
+
+; ================== CHECK LINE 2 =====================
+LINE2:	MVI A,FBH
+	STA 2800H	
+	LDA 1800H	 
+	ANI 07H		
+
+	MVI C,00H	
+	CPI 06H	; 0
+	JZ SHOW	
+	MVI C,83H	
+	CPI 05H	; STORE/INCR
+	JZ SHOW	 
+	MVI C,81H	 
+	CPI 03H	; DECR
+	JZ SHOW
+
+; ================== CHECK LINE 3 =====================
+LINE3:	MVI A,F7H
+	STA 2800H	
+	LDA 1800H	 
+	ANI 07H		
+
+	MVI C,01H	; 1
+	CPI 06H	
+	JZ SHOW	
+	MVI C,02H	; 2
+	CPI 05H	
+	JZ SHOW	 
+	MVI C,03H	; 3
+	CPI 03H	
+	JZ SHOW
+
+; ================== CHECK LINE 4 =====================
+LINE4:	MVI A,EFH
+	STA 2800H	
+	LDA 1800H	 
+	ANI 07H		
+
+	MVI C,04H
+	CPI 06H	; 4
+	JZ SHOW
+	MVI C,05H
+	CPI 05H	; 5
+	JZ SHOW
+	MVI C,06H
+	CPI 03H	; 6
+	JZ SHOW
+
+; ================== CHECK LINE 5 =====================
+LINE5:	MVI A,DFH
+	STA 2800H	
+	LDA 1800H	 
+	ANI 07H		
+
+	MVI C,07H
+	CPI 06H	; 7
+	JZ SHOW
+	MVI C,08H
+	CPI 05H	; 8
+	JZ SHOW
+	MVI C,09H
+	CPI 03H	; 9
+	JZ SHOW
+; ================== CHECK LINE 6 =====================
+LINE6:	MVI A,BFH
+	STA 2800H	
+	LDA 1800H	 
+	ANI 07H		
+
+	MVI C,0AH
+	CPI 06H	; A
+	JZ SHOW
+	MVI C,0BH
+	CPI 05H	; B
+	JZ SHOW
+	MVI C,0CH
+	CPI 03H	; C
+	JZ SHOW
+
+; ================== CHECK LINE 7 =====================
+LINE7:	MVI A,7FH
+	STA 2800H	
+	LDA 1800H	 
+	ANI 07H		
+
+	MVI C,0DH
+	CPI 06H	; D
+	JZ SHOW
+	MVI C,0EH
+	CPI 05H	; E
+	JZ SHOW
+	MVI C,0FH
+	CPI 03H	; F
+	JZ SHOW
+
+	JMP START	; IF NO BUTTON PRESSED REPEAT CHECK
+
+; ======= FORWARD PASSWORD TO 7-SEGMENT DISPLAY ===========
+SHOW:	LXI H,0A04H		; POSITION 0Á04Ç
+	MOV A,C		; PASSWORD --> Á
+	ANI 0FH		; KEEP 4 LSBs 
+	MOV M,A		; MOVE THEM AT 0A04H
+				; 5TH DIGIT OF 7-segment display
+
+	INX H			; NEXT MEMORY POSITION
+	MOV A,C		
+	ANI F0H		; KEEP 4 MSBs
+	RLC
+	RLC			; MAKE THEM  LSBs
+	RLC
+	RLC	
+	MOV M,A		; SAVE AT THE 6TH DIGIT OF
+				; 7-segment displaY
+	
+	LXI D,0A00H		; MOVE BLOCK 0A00H - 0A05H
+				; TO READ  DCD
+	CALL STDM	
+	CALL DCD		; 
+
+	JMP START		; LOOP
+
+	END
